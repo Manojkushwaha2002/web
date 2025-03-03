@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Location with Google Maps API</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for the map */
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        .speedometer {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .speed {
+            height: 100%;
+            background: #4caf50;
+            width: 0%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto mt-10 p-5 bg-white shadow-md rounded-lg">
+        <h1 class="text-2xl font-bold text-center text-blue-600 mb-5">Get Live Location with Google Maps API</h1>
+        <div class="text-center mb-4">
+            <button id="getLocation" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300">Get Location</button>
+            <button id="getDirections" class="ml-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300">Get Directions</button>
+        </div>
+        <div class="speedometer">
+            <div id="speed" class="speed"></div>
+        </div>
+        <div id="map" class="border border-gray-300 rounded-lg"></div>
+    </div>
+
+    <script>
+        let map;
+        let marker;
+        let directionsService;
+        let directionsRenderer;
+        let previousPosition = null;
+        let speedElement = document.getElementById('speed');
+
+        function initMap() {
+            // Initialize the map
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: -34.397, lng: 150.644 },
+                zoom: 15,
+            });
+
+            marker = new google.maps.Marker({
+                position: map.getCenter(),
+                map: map,
+                title: "You are here!",
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+        }
+
+        document.getElementById('getLocation').addEventListener('click', () => {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const userLocation = { lat: latitude, lng: longitude };
+
+                        // Update marker position
+                        map.setCenter(userLocation);
+                        marker.setPosition(userLocation);
+                        previousPosition = userLocation;
+
+                        // Optional: Add speedometer functionality
+                        if (previousPosition) {
+                            // Speed calculation can be added here
+                        }
+                    },
+                    (error) => {
+                        console.error("Error getting location: ", error);
+                        alert("Unable to retrieve your location.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        document.getElementById('getDirections').addEventListener('click', () => {
+            if (previousPosition) {
+                const destination = { lat: -34.407, lng: 150.654 }; // Example destination
+                getDirections(previousPosition, destination);
+            } else {
+                alert("Please get your location first.");
+            }
+        });
+
+        function getDirections(origin, destination) {
+            directionsService.route({
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING, // Change to BICYCLING for bike directions
+            }, (response, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(response);
+                } else {
+                    alert("Directions request failed due to " + status);
+                }
+            });
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
